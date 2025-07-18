@@ -69,7 +69,7 @@ backend/
 ## 🛣️ Roadmap
 
 - [x] Estrutura inicial com Docker e backend
-- [] MySQL rodando via container
+- [ ] MySQL rodando via container
 - [ ] Conexão ao banco com Go
 - [ ] Cadastro de usuários
 - [ ] Autenticação JWT
