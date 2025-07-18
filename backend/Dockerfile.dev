@@ -1,0 +1,21 @@
+# backend/Dockerfile.dev - Para desenvolvimento com hot reload
+
+FROM golang:1.21.1
+
+# Diretório de trabalho dentro do container
+WORKDIR /app
+
+# Copia go.mod e go.sum primeiro para cache de dependências
+COPY go.mod go.sum ./
+
+# Baixa as dependências
+RUN go mod download
+
+# Instala air para hot reload (versão compatível com Go 1.21)
+RUN go install github.com/cosmtrek/air@v1.49.0
+
+# Expõe a porta usada pelo Gin
+EXPOSE 8080
+
+# Comando para executar o projeto em modo desenvolvimento com hot reload
+CMD ["air", "-c", ".air.toml"]
