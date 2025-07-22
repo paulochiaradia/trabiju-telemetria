@@ -30,7 +30,7 @@ func main() {
 
 	// Configurar Gin
 	r := gin.Default()
-	
+
 	// Registrar rotas
 	routes.RegisterRoutes(r)
 

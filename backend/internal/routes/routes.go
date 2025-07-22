@@ -12,12 +12,12 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// Controller para testes de banco de dados
 	dbController := &controllers.DatabaseController{}
-	
+
 	// Grupo de rotas para testes de banco
 	dbGroup := r.Group("/database")
 	{
-		dbGroup.GET("/test", dbController.TestConnection)     // Testar conexão
-		dbGroup.GET("/tables", dbController.ListTables)      // Listar tabelas
+		dbGroup.GET("/test", dbController.TestConnection)        // Testar conexão
+		dbGroup.GET("/tables", dbController.ListTables)          // Listar tabelas
 		dbGroup.GET("/table/:table", dbController.DescribeTable) // Descrever tabela
 	}
 }

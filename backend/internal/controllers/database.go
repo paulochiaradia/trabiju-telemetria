@@ -17,7 +17,7 @@ func (dc *DatabaseController) TestConnection(c *gin.Context) {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao carregar configurações",
+			"error":   "Erro ao carregar configurações",
 			"details": err.Error(),
 		})
 		return
@@ -27,7 +27,7 @@ func (dc *DatabaseController) TestConnection(c *gin.Context) {
 	conn, err := database.NewConnection(cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao conectar com o banco de dados",
+			"error":   "Erro ao conectar com o banco de dados",
 			"details": err.Error(),
 		})
 		return
@@ -39,21 +39,21 @@ func (dc *DatabaseController) TestConnection(c *gin.Context) {
 	err = conn.DB.QueryRow("SELECT VERSION()").Scan(&version)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao executar query de teste",
+			"error":   "Erro ao executar query de teste",
 			"details": err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"message": "Conexão com banco de dados funcionando!",
+		"status":           "success",
+		"message":          "Conexão com banco de dados funcionando!",
 		"database_version": version,
 		"config": gin.H{
-			"host": cfg.DBHost,
-			"port": cfg.DBPort,
+			"host":     cfg.DBHost,
+			"port":     cfg.DBPort,
 			"database": cfg.DBName,
-			"user": cfg.DBUser,
+			"user":     cfg.DBUser,
 		},
 	})
 }
@@ -64,7 +64,7 @@ func (dc *DatabaseController) ListTables(c *gin.Context) {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao carregar configurações",
+			"error":   "Erro ao carregar configurações",
 			"details": err.Error(),
 		})
 		return
@@ -74,7 +74,7 @@ func (dc *DatabaseController) ListTables(c *gin.Context) {
 	conn, err := database.NewConnection(cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao conectar com o banco de dados",
+			"error":   "Erro ao conectar com o banco de dados",
 			"details": err.Error(),
 		})
 		return
@@ -86,7 +86,7 @@ func (dc *DatabaseController) ListTables(c *gin.Context) {
 	rows, err := conn.DB.Query(query, cfg.DBName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao buscar tabelas",
+			"error":   "Erro ao buscar tabelas",
 			"details": err.Error(),
 		})
 		return
@@ -98,7 +98,7 @@ func (dc *DatabaseController) ListTables(c *gin.Context) {
 		var tableName string
 		if err := rows.Scan(&tableName); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Erro ao ler resultado",
+				"error":   "Erro ao ler resultado",
 				"details": err.Error(),
 			})
 			return
@@ -107,22 +107,22 @@ func (dc *DatabaseController) ListTables(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"database": cfg.DBName,
+		"status":       "success",
+		"database":     cfg.DBName,
 		"total_tables": len(tables),
-		"tables": tables,
+		"tables":       tables,
 	})
 }
 
 // DescribeTable mostra a estrutura de uma tabela específica
 func (dc *DatabaseController) DescribeTable(c *gin.Context) {
 	tableName := c.Param("table")
-	
+
 	// Carregar configurações
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao carregar configurações",
+			"error":   "Erro ao carregar configurações",
 			"details": err.Error(),
 		})
 		return
@@ -132,7 +132,7 @@ func (dc *DatabaseController) DescribeTable(c *gin.Context) {
 	conn, err := database.NewConnection(cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao conectar com o banco de dados",
+			"error":   "Erro ao conectar com o banco de dados",
 			"details": err.Error(),
 		})
 		return
@@ -144,7 +144,7 @@ func (dc *DatabaseController) DescribeTable(c *gin.Context) {
 	rows, err := conn.DB.Query(query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Erro ao descrever tabela",
+			"error":   "Erro ao descrever tabela",
 			"details": err.Error(),
 		})
 		return
@@ -152,12 +152,12 @@ func (dc *DatabaseController) DescribeTable(c *gin.Context) {
 	defer rows.Close()
 
 	type Column struct {
-		Field   string `json:"field"`
-		Type    string `json:"type"`
-		Null    string `json:"null"`
-		Key     string `json:"key"`
+		Field   string  `json:"field"`
+		Type    string  `json:"type"`
+		Null    string  `json:"null"`
+		Key     string  `json:"key"`
 		Default *string `json:"default"`
-		Extra   string `json:"extra"`
+		Extra   string  `json:"extra"`
 	}
 
 	var columns []Column
@@ -165,7 +165,7 @@ func (dc *DatabaseController) DescribeTable(c *gin.Context) {
 		var col Column
 		if err := rows.Scan(&col.Field, &col.Type, &col.Null, &col.Key, &col.Default, &col.Extra); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Erro ao ler estrutura da tabela",
+				"error":   "Erro ao ler estrutura da tabela",
 				"details": err.Error(),
 			})
 			return
@@ -174,8 +174,8 @@ func (dc *DatabaseController) DescribeTable(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"table": tableName,
+		"status":  "success",
+		"table":   tableName,
 		"columns": columns,
 	})
 }
