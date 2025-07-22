@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// Empresa represents a company/organization
+// Empresa representa uma empresa/organização
 type Empresa struct {
 	ID            int       `json:"id" db:"id"`
 	Nome          string    `json:"nome" db:"nome"`
@@ -16,12 +16,12 @@ type Empresa struct {
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// Usuario represents a user in the system
+// Usuario representa um usuário no sistema
 type Usuario struct {
 	ID                     int        `json:"id" db:"id"`
 	Nome                   string     `json:"nome" db:"nome"`
 	Email                  string     `json:"email" db:"email"`
-	Senha                  string     `json:"-" db:"senha"` // Never return password in JSON
+	Senha                  string     `json:"-" db:"senha"` // Nunca retorna senha no JSON
 	Telefone               string     `json:"telefone" db:"telefone"`
 	CPF                    string     `json:"cpf" db:"cpf"`
 	Avatar                 string     `json:"avatar" db:"avatar"`
@@ -42,7 +42,7 @@ type Usuario struct {
 	Empresa *Empresa `json:"empresa,omitempty"`
 }
 
-// Role represents user roles/permissions
+// Role representa os papéis/permissões de usuário
 type Role struct {
 	ID         int       `json:"id" db:"id"`
 	Nome       string    `json:"nome" db:"nome"`
@@ -52,7 +52,7 @@ type Role struct {
 	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// ConviteUsuario represents user invitations
+// ConviteUsuario representa convites de usuários
 type ConviteUsuario struct {
 	ID           int       `json:"id" db:"id"`
 	Email        string    `json:"email" db:"email"`
@@ -71,7 +71,7 @@ type ConviteUsuario struct {
 	ConvidadoPorUser *Usuario `json:"convidado_por_user,omitempty"`
 }
 
-// SolicitacaoCadastro represents registration requests
+// SolicitacaoCadastro representa solicitações de cadastro
 type SolicitacaoCadastro struct {
 	ID                   int       `json:"id" db:"id"`
 	Nome                 string    `json:"nome" db:"nome"`
@@ -94,7 +94,7 @@ type SolicitacaoCadastro struct {
 	AprovadoPorUser   *Usuario `json:"aprovado_por_user,omitempty"`
 }
 
-// Requests/Responses for API
+// Estruturas de Request/Response para API
 
 // CadastroComCodigoRequest - Cadastro usando código da empresa
 type CadastroComCodigoRequest struct {

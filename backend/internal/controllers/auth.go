@@ -8,7 +8,7 @@ import (
 	"github.com/paulochiaradia/trabiju-telemetria/internal/models"
 )
 
-// AuthController handles authentication and registration
+// AuthController gerencia autenticação e cadastro
 type AuthController struct {
 	// Aqui você injetaria os services/repositories necessários
 }
@@ -29,10 +29,10 @@ func (ac *AuthController) CadastroComCodigo(c *gin.Context) {
 	// TODO: Verificar se email já existe
 	// TODO: Validar CPF
 
-	// Fluxo baseado no role desejado
+	// Fluxo baseado no papel desejado
 	switch req.RoleDesejado {
 	case "entregador", "ajudante":
-		// Estes roles podem se cadastrar diretamente (dependendo da config da empresa)
+		// Estes papéis podem se cadastrar diretamente (dependendo da config da empresa)
 		// ou criar uma solicitação para aprovação
 		ac.processarCadastroBasico(c, req)
 	case "gestor":
@@ -40,7 +40,7 @@ func (ac *AuthController) CadastroComCodigo(c *gin.Context) {
 		ac.criarSolicitacaoAprovacao(c, req)
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Role inválido. Use: entregador, ajudante ou gestor",
+			"error": "Papel inválido. Use: entregador, ajudante ou gestor",
 		})
 		return
 	}
@@ -82,7 +82,7 @@ func (ac *AuthController) AceitarConvite(c *gin.Context) {
 
 	// TODO: Validar token do convite
 	// TODO: Verificar se não expirou
-	// TODO: Criar usuário com role definido no convite
+	// TODO: Criar usuário com papel definido no convite
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Convite aceito com sucesso",
@@ -121,7 +121,7 @@ func (ac *AuthController) CriarConvite(c *gin.Context) {
 
 // VerificarCodigoEmpresa valida se código da empresa existe
 func (ac *AuthController) VerificarCodigoEmpresa(c *gin.Context) {
-	codigo := c.Param("codigo")
+	//codigo := c.Param("codigo")
 
 	// TODO: Buscar empresa por código
 	// TODO: Verificar se está ativa
@@ -131,7 +131,7 @@ func (ac *AuthController) VerificarCodigoEmpresa(c *gin.Context) {
 		"empresa": gin.H{
 			"nome":                  "Gestão Telemetria LTDA",
 			"permite_auto_cadastro": true,
-			"roles_disponiveis":     []string{"entregador", "ajudante"},
+			"papeis_disponiveis":    []string{"entregador", "ajudante"},
 		},
 	})
 }
@@ -144,12 +144,12 @@ func (ac *AuthController) ListarSolicitacoesPendentes(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"solicitacoes": []gin.H{
 			{
-				"id":              1,
-				"nome":            "João Silva",
-				"email":           "joao@email.com",
-				"role_solicitado": "gestor",
-				"justificativa":   "Preciso gerenciar a equipe de entregas",
-				"created_at":      "2025-07-22T10:00:00Z",
+				"id":               1,
+				"nome":             "João Silva",
+				"email":            "joao@email.com",
+				"papel_solicitado": "gestor",
+				"justificativa":    "Preciso gerenciar a equipe de entregas",
+				"created_at":       "2025-07-22T10:00:00Z",
 			},
 		},
 	})

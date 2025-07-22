@@ -6,7 +6,7 @@
 
 ---
 
-## 🔗 **1. CONVITE POR GESTOR (Mais Seguro)**
+## 🔗 **1. CONVITE POR GESTOR **
 
 ### Como funciona:
 1. **Gestor** acessa o sistema
@@ -94,7 +94,7 @@ POST /api/auth/aprovar-solicitacao/123
 
 ---
 
-## 🚀 **Fluxo Recomendado para seu Sistema:**
+## 🚀 **Fluxo Recomendado :**
 
 ### **Para Entregadores e Ajudantes:**
 ```
@@ -113,41 +113,6 @@ Gestor → Criar Convite → Email → Usuário Aceita → Cadastro Automático
 
 ---
 
-## 🔧 **Implementação no Frontend:**
-
-### **Tela de Cadastro:**
-```javascript
-// 1. Verificar código da empresa
-const verificarCodigo = async (codigo) => {
-  const response = await fetch(`/api/auth/verificar-codigo/${codigo}`);
-  const data = await response.json();
-  
-  if (data.valido) {
-    // Mostrar roles disponíveis
-    setRolesDisponiveis(data.roles_disponiveis);
-  }
-};
-
-// 2. Cadastro com role
-const cadastrar = async (dados) => {
-  const response = await fetch('/api/auth/cadastro-com-codigo', {
-    method: 'POST',
-    body: JSON.stringify(dados)
-  });
-  
-  const result = await response.json();
-  
-  if (result.status === 'ativo') {
-    // Cadastro aprovado imediatamente
-    redirectToLogin();
-  } else if (result.status === 'pendente') {
-    // Aguardando aprovação
-    showPendingMessage();
-  }
-};
-```
-
----
 
 ## 📊 **Tabelas do Sistema:**
 

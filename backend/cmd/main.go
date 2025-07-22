@@ -1,14 +1,39 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
+	"github.com/paulochiaradia/trabiju-telemetria/internal/config"
+	"github.com/paulochiaradia/trabiju-telemetria/internal/database"
 	"github.com/paulochiaradia/trabiju-telemetria/internal/routes"
 )
 
-// main initializes the Gin router and registers the application routes.
-// It then starts the server on port 8080.
+// main inicializa o roteador Gin e registra as rotas da aplicação.
+// Em seguida, inicia o servidor na porta 8080.
 func main() {
+	// Carregar configurações do .env
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("Erro ao carregar configurações:", err)
+	}
+
+	// Conectar ao banco de dados
+	conn, err := database.NewConnection(cfg)
+	if err != nil {
+		log.Fatal("Erro ao conectar com o banco de dados:", err)
+	}
+	defer conn.Close()
+
+	log.Println("✅ Conexão com banco de dados estabelecida com sucesso!")
+	log.Printf("🚀 Servidor iniciando na porta %s", cfg.ServerPort)
+
+	// Configurar Gin
 	r := gin.Default()
+	
+	// Registrar rotas
 	routes.RegisterRoutes(r)
-	r.Run(":8080")
+
+	// Iniciar servidor
+	r.Run(":" + cfg.ServerPort)
 }
