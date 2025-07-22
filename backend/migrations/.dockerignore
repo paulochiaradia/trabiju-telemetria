@@ -1,0 +1,12 @@
+# Ignorar README.md que está causando warning no entrypoint
+README.md
+*.md
+
+# Logs e arquivos temporários
+*.log
+tmp/
+.tmp/
+
+# Arquivos de desenvolvimento
+.env.example
+.gitignore
