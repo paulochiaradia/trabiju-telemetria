@@ -14,6 +14,9 @@ RUN go mod download
 # Instala air para hot reload (versão compatível com Go 1.21)
 RUN go install github.com/cosmtrek/air@v1.49.0
 
+# Copia todo o código fonte (será sobrescrito pelo volume mount em desenvolvimento)
+COPY . .
+
 # Expõe a porta usada pelo Gin
 EXPOSE 8080
 

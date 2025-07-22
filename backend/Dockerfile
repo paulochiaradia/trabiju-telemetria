@@ -1,21 +1,54 @@
-# backend/Dockerfile
+# backend/Dockerfile - Produção otimizada com multi-stage build
 
-FROM golang:1.21.1
+# Stage 1: Build
+FROM golang:1.21.1-alpine AS builder
 
-# Diretório de trabalho dentro do container
-WORKDIR /app
+# Instalar dependências necessárias
+RUN apk add --no-cache git ca-certificates tzdata
 
-# Copia todos os arquivos para dentro do container
+# Diretório de trabalho
+WORKDIR /build
+
+# Copiar arquivos de dependências primeiro (cache layer)
+COPY go.mod go.sum ./
+
+# Baixar dependências
+RUN go mod download
+
+# Copiar código fonte
 COPY . .
 
-# Inicializa o módulo Go e baixa as dependências
-RUN go mod tidy
+# Compilar aplicação (binário estático)
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o trabiju ./cmd/main.go
 
-# Compila o projeto a partir do arquivo principal
-RUN go build -o trabiju ./cmd/main.go
+# Stage 2: Runtime
+FROM alpine:latest
 
-# Expõe a porta usada pelo Gin
+# Instalar certificados e timezone
+RUN apk --no-cache add ca-certificates tzdata
+
+# Criar usuário não-root
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Diretório de trabalho
+WORKDIR /app
+
+# Copiar binário do stage de build
+COPY --from=builder /build/trabiju .
+
+# Mudar ownership e permissões
+RUN chown appuser:appgroup trabiju && chmod +x trabiju
+
+# Usar usuário não-root
+USER appuser
+
+# Expor porta
 EXPOSE 8080
 
-# Comando para executar o binário
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ping || exit 1
+
+# Comando para executar
 CMD ["./trabiju"]

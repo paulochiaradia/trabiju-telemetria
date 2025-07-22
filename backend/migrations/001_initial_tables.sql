@@ -2,9 +2,8 @@
 -- Created: 2025-07-22
 -- Description: Sistema completo de usuários e telemetria
 
--- Criação do banco de dados
-CREATE DATABASE IF NOT EXISTS gestao_telemetria;
-USE gestao_telemetria;
+-- Usar o banco de dados existente (criado pelo docker-compose)
+USE trabiju_telemetria;
 
 -- Tabela de tipos/roles de usuários
 CREATE TABLE roles (

@@ -2,7 +2,7 @@
 -- Created: 2025-07-22
 -- Description: Criar usuário administrador inicial
 
-USE gestao_telemetria;
+USE trabiju_telemetria;
 
 -- Inserir usuário administrador padrão
 INSERT INTO usuarios (

@@ -3,14 +3,24 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
-    container_name: mysql_db
+    container_name: mysql_db_dev
     restart: always
     env_file:
       - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data_dev:/var/lib/mysql
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   backend:
     build:
@@ -18,11 +28,20 @@ services:
       dockerfile: Dockerfile.dev
     container_name: go_backend_dev
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "8081:8080"
     volumes:
       - ./backend:/app
+      - ./.env:/app/.env  # Monta o .env da raiz para dentro do container
+      - /app/tmp  # Excluir tmp do volume mount
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=mysql
+      - ENVIRONMENT=development
+    restart: unless-stopped
 
 volumes:
-  db_data:
+  db_data_dev:

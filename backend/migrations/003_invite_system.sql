@@ -2,7 +2,7 @@
 -- Created: 2025-07-22
 -- Description: Tabelas para controlar cadastro de usuários com roles específicos
 
-USE gestao_telemetria;
+USE trabiju_telemetria;
 
 -- Tabela de empresas/organizações
 CREATE TABLE empresas (

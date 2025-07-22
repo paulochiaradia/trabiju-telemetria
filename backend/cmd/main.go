@@ -31,6 +31,14 @@ func main() {
 	// Configurar Gin
 	r := gin.Default()
 
+	// Configurar proxies confiáveis para segurança
+	if len(cfg.TrustedProxies) > 0 {
+		err = r.SetTrustedProxies(cfg.TrustedProxies)
+		if err != nil {
+			log.Fatal("Erro ao configurar proxies confiáveis:", err)
+		}
+	}
+
 	// Registrar rotas
 	routes.RegisterRoutes(r)
 
