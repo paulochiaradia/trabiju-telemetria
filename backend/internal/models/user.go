@@ -100,9 +100,9 @@ type SolicitacaoCadastro struct {
 type CadastroComCodigoRequest struct {
 	Nome          string `json:"nome" validate:"required,min=2,max=100"`
 	Email         string `json:"email" validate:"required,email"`
-	Senha         string `json:"senha" validate:"required,min=6"`
-	Telefone      string `json:"telefone" validate:"required"`
-	CPF           string `json:"cpf" validate:"required"`
+	Senha         string `json:"senha" validate:"required,strongpassword"`
+	Telefone      string `json:"telefone" validate:"required,phone"`
+	CPF           string `json:"cpf" validate:"required,cpf"`
 	CodigoEmpresa string `json:"codigo_empresa" validate:"required"`
 	RoleDesejado  string `json:"role_desejado" validate:"required,oneof=entregador ajudante"`
 	Justificativa string `json:"justificativa,omitempty"`
@@ -112,9 +112,9 @@ type CadastroComCodigoRequest struct {
 type AceitarConviteRequest struct {
 	Token    string `json:"token" validate:"required"`
 	Nome     string `json:"nome" validate:"required,min=2,max=100"`
-	Senha    string `json:"senha" validate:"required,min=6"`
-	Telefone string `json:"telefone" validate:"required"`
-	CPF      string `json:"cpf" validate:"required"`
+	Senha    string `json:"senha" validate:"required,strongpassword"`
+	Telefone string `json:"telefone" validate:"required,phone"`
+	CPF      string `json:"cpf" validate:"required,cpf"`
 }
 
 // CriarConviteRequest - Gestor criar convite
