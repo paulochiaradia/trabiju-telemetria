@@ -78,6 +78,8 @@ func (s *AuthService) RegisterWithInvite(req models.AceitarConviteRequest) (*mod
 	}
 
 	// 5. Criar usuário
+	defaultConfig := "{}"
+	apiToken := s.generateAPIToken()
 	user := &models.Usuario{
 		Nome:                   req.Nome,
 		Email:                  invite.Email,
@@ -87,8 +89,8 @@ func (s *AuthService) RegisterWithInvite(req models.AceitarConviteRequest) (*mod
 		RoleID:                 invite.RoleID,
 		EmpresaID:              invite.EmpresaID,
 		Ativo:                  true, // Ativo direto por convite
-		ConfiguracoesDashboard: "{}",
-		APIToken:               s.generateAPIToken(),
+		ConfiguracoesDashboard: &defaultConfig,
+		APIToken:               &apiToken,
 		SenhaAlteradaEm:        time.Now(),
 	}
 
@@ -174,6 +176,8 @@ func (s *AuthService) RegisterWithCompanyCode(req models.CadastroComCodigoReques
 	}
 
 	// 7. Criar usuário (inativo até confirmar email)
+	defaultConfig2 := "{}"
+	apiToken2 := s.generateAPIToken()
 	user := &models.Usuario{
 		Nome:                   req.Nome,
 		Email:                  req.Email,
@@ -183,8 +187,8 @@ func (s *AuthService) RegisterWithCompanyCode(req models.CadastroComCodigoReques
 		RoleID:                 role.ID,
 		EmpresaID:              company.ID,
 		Ativo:                  false, // Inativo até confirmar email
-		ConfiguracoesDashboard: "{}",
-		APIToken:               s.generateAPIToken(),
+		ConfiguracoesDashboard: &defaultConfig2,
+		APIToken:               &apiToken2,
 		SenhaAlteradaEm:        time.Now(),
 	}
 

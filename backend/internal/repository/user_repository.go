@@ -64,11 +64,12 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.Usuario, error) {
 
 	var ultimoLogin, bloqueadoAte sql.NullTime
 	var roleNome, roleDescricao, empresaNome, codigoConvite sql.NullString
+	var avatar, configuracoesDashboard, apiToken sql.NullString
 
 	err := row.Scan(
 		&user.ID, &user.Nome, &user.Email, &user.Senha, &user.Telefone,
-		&user.CPF, &user.Avatar, &user.RoleID, &user.EmpresaID, &user.Ativo,
-		&ultimoLogin, &user.ConfiguracoesDashboard, &user.APIToken,
+		&user.CPF, &avatar, &user.RoleID, &user.EmpresaID, &user.Ativo,
+		&ultimoLogin, &configuracoesDashboard, &apiToken,
 		&user.TentativasLogin, &bloqueadoAte, &user.SenhaAlteradaEm,
 		&user.CreatedAt, &user.UpdatedAt, &roleNome, &roleDescricao,
 		&empresaNome, &codigoConvite,
@@ -87,6 +88,17 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.Usuario, error) {
 	}
 	if bloqueadoAte.Valid {
 		user.BloqueadoAte = &bloqueadoAte.Time
+	}
+
+	// Converter NullString para *string
+	if avatar.Valid {
+		user.Avatar = &avatar.String
+	}
+	if configuracoesDashboard.Valid {
+		user.ConfiguracoesDashboard = &configuracoesDashboard.String
+	}
+	if apiToken.Valid {
+		user.APIToken = &apiToken.String
 	}
 
 	// Adicionar relacionamentos se existirem
@@ -124,11 +136,12 @@ func (r *UserRepository) GetUserByID(id int) (*models.Usuario, error) {
 	row := r.db.QueryRow(query, id)
 
 	var ultimoLogin, bloqueadoAte sql.NullTime
+	var avatar, configuracoesDashboard, apiToken sql.NullString
 
 	err := row.Scan(
 		&user.ID, &user.Nome, &user.Email, &user.Telefone,
-		&user.CPF, &user.Avatar, &user.RoleID, &user.EmpresaID, &user.Ativo,
-		&ultimoLogin, &user.ConfiguracoesDashboard, &user.APIToken,
+		&user.CPF, &avatar, &user.RoleID, &user.EmpresaID, &user.Ativo,
+		&ultimoLogin, &configuracoesDashboard, &apiToken,
 		&user.TentativasLogin, &bloqueadoAte, &user.SenhaAlteradaEm,
 		&user.CreatedAt, &user.UpdatedAt,
 	)
@@ -145,6 +158,17 @@ func (r *UserRepository) GetUserByID(id int) (*models.Usuario, error) {
 	}
 	if bloqueadoAte.Valid {
 		user.BloqueadoAte = &bloqueadoAte.Time
+	}
+
+	// Converter NullString para *string
+	if avatar.Valid {
+		user.Avatar = &avatar.String
+	}
+	if configuracoesDashboard.Valid {
+		user.ConfiguracoesDashboard = &configuracoesDashboard.String
+	}
+	if apiToken.Valid {
+		user.APIToken = &apiToken.String
 	}
 
 	return user, nil

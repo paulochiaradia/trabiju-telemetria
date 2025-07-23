@@ -19,18 +19,18 @@ type Empresa struct {
 // Usuario representa um usuário no sistema
 type Usuario struct {
 	ID                     int        `json:"id" db:"id"`
-	Nome                   string     `json:"nome" db:"nome"`
-	Email                  string     `json:"email" db:"email"`
-	Senha                  string     `json:"-" db:"senha"` // Nunca retorna senha no JSON
-	Telefone               string     `json:"telefone" db:"telefone"`
-	CPF                    string     `json:"cpf" db:"cpf"`
-	Avatar                 string     `json:"avatar" db:"avatar"`
+	Nome                   string     `json:"nome" db:"nome" validate:"required,min=2,max=100"`
+	Email                  string     `json:"email" db:"email" validate:"required,email"`
+	Senha                  string     `json:"-" db:"senha" validate:"required,min=8,strongpassword"` // Nunca retorna senha no JSON
+	Telefone               string     `json:"telefone" db:"telefone" validate:"required,phone"`
+	CPF                    string     `json:"cpf" db:"cpf" validate:"required,cpf"`
+	Avatar                 *string    `json:"avatar" db:"avatar"`
 	RoleID                 int        `json:"role_id" db:"role_id"`
 	EmpresaID              int        `json:"empresa_id" db:"empresa_id"`
 	Ativo                  bool       `json:"ativo" db:"ativo"`
 	UltimoLogin            *time.Time `json:"ultimo_login" db:"ultimo_login"`
-	ConfiguracoesDashboard string     `json:"configuracoes_dashboard" db:"configuracoes_dashboard"` // JSON
-	APIToken               string     `json:"api_token" db:"api_token"`
+	ConfiguracoesDashboard *string    `json:"configuracoes_dashboard" db:"configuracoes_dashboard"` // JSON
+	APIToken               *string    `json:"api_token" db:"api_token"`
 	TentativasLogin        int        `json:"tentativas_login" db:"tentativas_login"`
 	BloqueadoAte           *time.Time `json:"bloqueado_ate" db:"bloqueado_ate"`
 	SenhaAlteradaEm        time.Time  `json:"senha_alterada_em" db:"senha_alterada_em"`
