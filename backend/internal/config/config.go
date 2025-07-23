@@ -3,21 +3,40 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
+	// Server
 	ServerPort     string
-	DBHost         string
-	DBPort         string
-	DBUser         string
-	DBPassword     string
-	DBName         string
-	JWTSecret      string
 	Environment    string
 	TrustedProxies []string
+
+	// Database
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPassword string
+	DBName     string
+
+	// JWT
+	JWTSecret      string
+	JWTExpiryHours int
+
+	// Email/SMTP
+	SMTPHost     string
+	SMTPPort     string
+	SMTPUser     string
+	SMTPPassword string
+	FromEmail    string
+	FromName     string
+
+	// Application
+	FrontendURL string
+	AdminEmail  string
 }
 
 // GetDatabaseDSN constrói e retorna a string de conexão do banco
@@ -44,21 +63,46 @@ func (c *Config) GetDatabaseDSNWithOptions(options map[string]string) string {
 }
 
 func LoadConfig() (*Config, error) {
+	// Tentar carregar .env do diretório atual, se falhar, tentar do diretório pai
 	err := godotenv.Load()
 	if err != nil {
-		return nil, err
+		// Tentar carregar do diretório pai (para quando executar de cmd/)
+		err = godotenv.Load("../.env")
+		if err != nil {
+			return nil, err
+		}
 	}
 
+	jwtExpiryHours, _ := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "24"))
+
 	return &Config{
+		// Server
 		ServerPort:     getEnv("SERVER_PORT", "8080"),
-		DBHost:         getEnv("DB_HOST", "localhost"),
-		DBPort:         getEnv("DB_PORT", "3306"),
-		DBUser:         getEnv("DB_USER", "user"),
-		DBPassword:     getEnv("DB_PASSWORD", "password"),
-		DBName:         getEnv("DB_NAME", "dbname"),
-		JWTSecret:      getEnv("JWT_SECRET", ""),
 		Environment:    getEnv("ENVIRONMENT", "development"),
 		TrustedProxies: getTrustedProxies(),
+
+		// Database
+		DBHost:     getEnv("DB_HOST", "localhost"),
+		DBPort:     getEnv("DB_PORT", "3306"),
+		DBUser:     getEnv("DB_USER", "user"),
+		DBPassword: getEnv("DB_PASSWORD", "password"),
+		DBName:     getEnv("DB_NAME", "trabiju_telemetria"),
+
+		// JWT
+		JWTSecret:      getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
+		JWTExpiryHours: jwtExpiryHours,
+
+		// Email/SMTP
+		SMTPHost:     getEnv("SMTP_HOST", ""),
+		SMTPPort:     getEnv("SMTP_PORT", "587"),
+		SMTPUser:     getEnv("SMTP_USER", ""),
+		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+		FromEmail:    getEnv("FROM_EMAIL", "noreply@gestaotelemetria.com"),
+		FromName:     getEnv("FROM_NAME", "Gestão Telemetria"),
+
+		// Application
+		FrontendURL: getEnv("FRONTEND_URL", "http://localhost:3000"),
+		AdminEmail:  getEnv("ADMIN_EMAIL", "admin@gestaotelemetria.com"),
 	}, nil
 }
 
