@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/paulochiaradia/trabiju-telemetria/internal/config"
 	"github.com/paulochiaradia/trabiju-telemetria/internal/database"
+	"github.com/paulochiaradia/trabiju-telemetria/internal/middleware"
 	"github.com/paulochiaradia/trabiju-telemetria/internal/routes"
 )
 
@@ -28,8 +29,10 @@ func main() {
 	log.Println("✅ Conexão com banco de dados estabelecida com sucesso!")
 	log.Printf("🚀 Servidor iniciando na porta %s", cfg.ServerPort)
 
-	// Configurar Gin
-	r := gin.Default()
+	// Configurar Gin com middleware customizado (sem logs de health check)
+	r := gin.New()
+	r.Use(middleware.CustomLogger())
+	r.Use(gin.Recovery())
 
 	// Configurar proxies confiáveis para segurança
 	if len(cfg.TrustedProxies) > 0 {
