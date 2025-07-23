@@ -42,8 +42,8 @@ func main() {
 		}
 	}
 
-	// Registrar rotas
-	routes.RegisterRoutes(r)
+	// Registrar rotas com sistema de autenticação completo
+	routes.SetupRoutes(r, conn.DB)
 
 	// Iniciar servidor
 	r.Run(":" + cfg.ServerPort)

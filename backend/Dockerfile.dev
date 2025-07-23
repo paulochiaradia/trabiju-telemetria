@@ -1,6 +1,6 @@
 # backend/Dockerfile.dev - Para desenvolvimento com hot reload
 
-FROM golang:1.21.1
+FROM golang:1.21
 
 # Diretório de trabalho dentro do container
 WORKDIR /app
