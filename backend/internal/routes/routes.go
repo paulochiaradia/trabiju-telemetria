@@ -2,6 +2,7 @@ package routes
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/paulochiaradia/trabiju-telemetria/internal/controllers"
@@ -33,6 +34,7 @@ func SetupRoutes(router *gin.Engine, db *sql.DB) {
 	router.Use(middleware.CustomLogger())
 	router.Use(middleware.CORSMiddleware())
 	router.Use(middleware.SecurityMiddleware())
+	router.Use(middleware.RateLimitMiddleware()) // Rate limiting global
 	router.Use(gin.Recovery())
 
 	// Inicializar repositórios
@@ -54,21 +56,26 @@ func SetupRoutes(router *gin.Engine, db *sql.DB) {
 	authController := controllers.NewAuthController(authService, jwtService)
 	dbController := &controllers.DatabaseController{}
 
-	// Rotas públicas (sem autenticação)
+	// Rotas públicas com rate limiting padrão
 	public := router.Group("/api/v1")
 	{
-		// Saúde da aplicação
+		// Saúde da aplicação (sem rate limit adicional)
 		public.GET("/ping", controllers.PingHandler)
 		public.GET("/health", controllers.PingHandler) // Usando PingHandler como health check
 
-		// Autenticação
-		public.POST("/auth/login", authController.Login)
-		public.POST("/auth/register/code", authController.CadastroComCodigo)
-		public.POST("/auth/invite/accept", authController.AceitarConvite)
-		public.POST("/auth/refresh", authController.RefreshToken)
-
 		// Confirmação de email (sem auth para permitir clique direto do email)
 		public.GET("/auth/confirm-email", authController.ConfirmarEmail)
+	}
+
+	// Rotas de autenticação com rate limiting mais restritivo
+	authGroup := router.Group("/api/v1")
+	authGroup.Use(middleware.RateLimitWithConfig(20, time.Minute)) // 20 req/min para auth
+	{
+		// Endpoints sensíveis de autenticação
+		authGroup.POST("/auth/login", authController.Login)
+		authGroup.POST("/auth/register/code", authController.CadastroComCodigo)
+		authGroup.POST("/auth/invite/accept", authController.AceitarConvite)
+		authGroup.POST("/auth/refresh", authController.RefreshToken)
 	}
 
 	// Rotas protegidas (requer autenticação)
@@ -88,7 +95,4 @@ func SetupRoutes(router *gin.Engine, db *sql.DB) {
 			admin.GET("/db/table/:table", dbController.DescribeTable)
 		}
 	}
-
-	// Manter compatibilidade com rotas antigas (evitar duplicação)
-	// RegisterRoutes(router) - Removido para evitar duplicação
 }
