@@ -66,10 +66,6 @@ func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Implementar verificação de roles por nome
-		// Por enquanto, permitir acesso baseado no role_id
-		// 1 = admin, 2 = gestor, 3 = entregador, 4 = ajudante
-
 		roleID := userRoleID.(int)
 
 		// Verificar se o role está permitido
@@ -77,19 +73,23 @@ func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 		for _, role := range allowedRoles {
 			switch role {
 			case "admin":
-				if roleID == 1 {
+				// Admin seria role_id = 3 (gestor) - máximo nível
+				if roleID == 3 {
 					allowed = true
 				}
 			case "gestor":
-				if roleID == 1 || roleID == 2 {
+				// Gestor também é role_id = 3
+				if roleID == 3 {
 					allowed = true
 				}
 			case "entregador":
-				if roleID == 1 || roleID == 2 || roleID == 3 {
+				// Entregador é role_id = 1, mas gestor também pode
+				if roleID == 1 || roleID == 3 {
 					allowed = true
 				}
 			case "ajudante":
-				if roleID == 1 || roleID == 2 || roleID == 3 || roleID == 4 {
+				// Qualquer role pode fazer o que ajudante faz
+				if roleID == 1 || roleID == 2 || roleID == 3 {
 					allowed = true
 				}
 			}

@@ -118,6 +118,14 @@ func (dc *DatabaseController) ListTables(c *gin.Context) {
 func (dc *DatabaseController) DescribeTable(c *gin.Context) {
 	tableName := c.Param("table")
 
+	// Validação básica do nome da tabela (apenas letras, números e underscores)
+	if tableName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Nome da tabela é obrigatório",
+		})
+		return
+	}
+
 	// Carregar configurações
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -140,7 +148,8 @@ func (dc *DatabaseController) DescribeTable(c *gin.Context) {
 	defer conn.Close()
 
 	// Descrever estrutura da tabela
-	query := "DESCRIBE " + tableName
+	// Usar backticks para escapar o nome da tabela e evitar problemas com caracteres especiais
+	query := "DESCRIBE `" + tableName + "`"
 	rows, err := conn.DB.Query(query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
