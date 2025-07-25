@@ -20,15 +20,14 @@ func (r *UserRepository) CreateUser(user *models.Usuario) error {
 	query := `
 		INSERT INTO usuarios (
 			nome, email, senha, telefone, cpf, avatar, role_id, empresa_id, 
-			ativo, configuracoes_dashboard, api_token, senha_alterada_em,
-			created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+			ativo, configuracoes_dashboard, api_token
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	result, err := r.db.Exec(query,
 		user.Nome, user.Email, user.Senha, user.Telefone, user.CPF,
 		user.Avatar, user.RoleID, user.EmpresaID, user.Ativo,
-		user.ConfiguracoesDashboard, user.APIToken, time.Now(),
+		user.ConfiguracoesDashboard, user.APIToken,
 	)
 
 	if err != nil {

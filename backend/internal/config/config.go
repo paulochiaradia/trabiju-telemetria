@@ -63,13 +63,20 @@ func (c *Config) GetDatabaseDSNWithOptions(options map[string]string) string {
 }
 
 func LoadConfig() (*Config, error) {
-	// Tentar carregar .env do diretório atual, se falhar, tentar do diretório pai
-	err := godotenv.Load()
-	if err != nil {
-		// Tentar carregar do diretório pai (para quando executar de cmd/)
-		err = godotenv.Load("../.env")
+	// Em ambiente de produção/Docker, usar apenas variáveis de ambiente
+	environment := os.Getenv("ENVIRONMENT")
+	if environment == "production" {
+		// Não tentar carregar .env em produção
+	} else {
+		// Tentar carregar .env apenas em desenvolvimento
+		err := godotenv.Load()
 		if err != nil {
-			return nil, err
+			// Tentar carregar do diretório pai (para quando executar de cmd/)
+			err = godotenv.Load("../.env")
+			if err != nil {
+				// Se não conseguir carregar .env, continuar usando apenas variáveis de ambiente
+				fmt.Println("Aviso: Arquivo .env não encontrado, usando apenas variáveis de ambiente")
+			}
 		}
 	}
 

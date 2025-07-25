@@ -1,8 +1,10 @@
 package services
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
+	"net"
 	"net/smtp"
 	"os"
 )
@@ -49,7 +51,7 @@ func (s *EmailService) SendWelcomeEmail(to, name string) error {
 // SendEmailConfirmation envia email de confirmação
 func (s *EmailService) SendEmailConfirmation(to, name, token string) error {
 	subject := "Confirme seu email - Sistema de Telemetria"
-	confirmationURL := fmt.Sprintf("%s/confirm-email?token=%s", os.Getenv("FRONTEND_URL"), token)
+	confirmationURL := fmt.Sprintf("%s/auth/confirm-email?token=%s", os.Getenv("FRONTEND_URL"), token)
 
 	body := fmt.Sprintf(`
 		<html>
@@ -156,9 +158,13 @@ func (s *EmailService) SendPasswordResetEmail(to, name, token string) error {
 
 // sendEmail método privado para enviar emails
 func (s *EmailService) sendEmail(to, subject, body string) error {
-	// Se não tiver configuração SMTP, apenas loga
-	if s.smtpHost == "" {
-		log.Printf("EMAIL (SMTP não configurado): Para: %s, Assunto: %s", to, subject)
+	log.Printf("Iniciando envio de email para: %s", to)
+	log.Printf("Configuração SMTP - Host: %s, Port: %s, User: %s", s.smtpHost, s.smtpPort, s.smtpUser)
+
+	// Se não tiver configuração SMTP completa, apenas loga
+	if s.smtpHost == "" || s.smtpUser == "" || s.smtpPassword == "" ||
+		s.smtpUser == "seu-email@gmail.com" || s.smtpPassword == "sua-senha-app-gmail" {
+		log.Printf("EMAIL (SMTP não configurado ou com valores padrão): Para: %s, Assunto: %s", to, subject)
 		return nil
 	}
 
@@ -177,18 +183,66 @@ func (s *EmailService) sendEmail(to, subject, body string) error {
 	}
 	message += "\r\n" + body
 
-	auth := smtp.PlainAuth("", s.smtpUser, s.smtpPassword, s.smtpHost)
+	log.Printf("Tentando conectar ao SMTP: %s:%s com usuário: %s", s.smtpHost, s.smtpPort, s.smtpUser)
 
-	err := smtp.SendMail(
-		s.smtpHost+":"+s.smtpPort,
-		auth,
-		s.fromEmail,
-		[]string{to},
-		[]byte(message),
-	)
-
+	// Conectar ao servidor SMTP
+	conn, err := net.Dial("tcp", s.smtpHost+":"+s.smtpPort)
 	if err != nil {
-		log.Printf("Erro ao enviar email para %s: %v", to, err)
+		log.Printf("Erro ao conectar ao servidor SMTP: %v", err)
+		return err
+	}
+	defer conn.Close()
+
+	// Criar cliente SMTP
+	client, err := smtp.NewClient(conn, s.smtpHost)
+	if err != nil {
+		log.Printf("Erro ao criar cliente SMTP: %v", err)
+		return err
+	}
+	defer client.Quit()
+
+	// STARTTLS se suportado
+	if ok, _ := client.Extension("STARTTLS"); ok {
+		config := &tls.Config{ServerName: s.smtpHost}
+		if err = client.StartTLS(config); err != nil {
+			log.Printf("Erro ao iniciar TLS: %v", err)
+			return err
+		}
+		log.Printf("TLS iniciado com sucesso")
+	}
+
+	// Autenticação
+	auth := smtp.PlainAuth("", s.smtpUser, s.smtpPassword, s.smtpHost)
+	if err = client.Auth(auth); err != nil {
+		log.Printf("Erro na autenticação SMTP: %v", err)
+		return err
+	}
+	log.Printf("Autenticação SMTP bem-sucedida")
+
+	// Definir remetente
+	if err = client.Mail(s.fromEmail); err != nil {
+		log.Printf("Erro ao definir remetente: %v", err)
+		return err
+	}
+
+	// Definir destinatário
+	if err = client.Rcpt(to); err != nil {
+		log.Printf("Erro ao definir destinatário: %v", err)
+		return err
+	}
+
+	// Enviar dados
+	w, err := client.Data()
+	if err != nil {
+		log.Printf("Erro ao iniciar envio de dados: %v", err)
+		return err
+	}
+	defer w.Close()
+
+	_, err = w.Write([]byte(message))
+	if err != nil {
+		log.Printf("ERRO DETALHADO ao enviar dados do email para %s: %v", to, err)
+		log.Printf("Configuração usada - Host: %s:%s, From: %s, Auth User: %s", s.smtpHost, s.smtpPort, s.fromEmail, s.smtpUser)
 		return err
 	}
 

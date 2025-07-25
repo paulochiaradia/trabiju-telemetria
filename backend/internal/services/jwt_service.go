@@ -98,3 +98,45 @@ func (s *JWTService) RefreshToken(refreshTokenString string, roleID, empresaID i
 	// Gerar novo access token
 	return s.GenerateToken(claims.UserID, claims.Email, roleID, empresaID)
 }
+
+// GenerateCustomToken gera um token JWT com claims customizadas
+func (s *JWTService) GenerateCustomToken(customClaims map[string]interface{}) (string, error) {
+	// Criar claims do tipo MapClaims para permitir campos customizados
+	claims := jwt.MapClaims{}
+
+	// Adicionar todas as claims customizadas
+	for key, value := range customClaims {
+		claims[key] = value
+	}
+
+	// Adicionar claims padrão se não existirem
+	if _, exists := claims["iss"]; !exists {
+		claims["iss"] = "trabiju-telemetria"
+	}
+	if _, exists := claims["iat"]; !exists {
+		claims["iat"] = time.Now().Unix()
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(s.secretKey)
+}
+
+// ValidateCustomToken valida e retorna as claims customizadas do token
+func (s *JWTService) ValidateCustomToken(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("método de assinatura inválido")
+		}
+		return s.secretKey, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, errors.New("token inválido")
+}

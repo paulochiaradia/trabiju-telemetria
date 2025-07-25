@@ -214,25 +214,22 @@ func (ac *AuthController) ConfirmarEmail(c *gin.Context) {
 		return
 	}
 
-	// Buscar usuário pelo contexto (deve estar autenticado)
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Usuário não autenticado",
-		})
-		return
-	}
-
-	err := ac.authService.ConfirmEmail(userID.(int), token)
+	user, err := ac.authService.ConfirmEmail(token)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Erro ao confirmar email",
+			"error": err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Email confirmado com sucesso",
+		"user": gin.H{
+			"id":    user.ID,
+			"nome":  user.Nome,
+			"email": user.Email,
+			"ativo": user.Ativo,
+		},
 	})
 }
 

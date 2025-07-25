@@ -33,8 +33,8 @@ func SetupRoutes(router *gin.Engine, db *sql.DB) {
 	// Configurar middlewares globais
 	router.Use(middleware.CustomLogger())
 	router.Use(middleware.CORSMiddleware())
-	router.Use(middleware.SecurityMiddleware())
-	router.Use(middleware.RateLimitMiddleware()) // Rate limiting global
+	//	router.Use(middleware.SecurityMiddleware())
+	//	router.Use(middleware.RateLimitMiddleware()) // Rate limiting global
 	router.Use(gin.Recovery())
 
 	// Inicializar repositórios

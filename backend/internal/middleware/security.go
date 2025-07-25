@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -98,9 +99,9 @@ func RateLimitWithConfig(maxRequests int, duration time.Duration) gin.HandlerFun
 		// Verificar se há tokens suficientes
 		if info.tokens < 1 {
 			// Rate limit excedido
-			c.Header("X-RateLimit-Limit", string(rune(maxRequests)))
+			c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", maxRequests))
 			c.Header("X-RateLimit-Remaining", "0")
-			c.Header("X-RateLimit-Reset", string(rune(now.Add(duration).Unix())))
+			c.Header("X-RateLimit-Reset", fmt.Sprintf("%d", now.Add(duration).Unix()))
 
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error":       "Rate limit exceeded",
@@ -115,8 +116,8 @@ func RateLimitWithConfig(maxRequests int, duration time.Duration) gin.HandlerFun
 		info.tokens--
 
 		// Adicionar headers informativos
-		c.Header("X-RateLimit-Limit", string(rune(maxRequests)))
-		c.Header("X-RateLimit-Remaining", string(rune(int(info.tokens))))
+		c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", maxRequests))
+		c.Header("X-RateLimit-Remaining", fmt.Sprintf("%d", int(info.tokens)))
 
 		c.Next()
 	}

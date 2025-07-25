@@ -165,7 +165,6 @@ func (s *AuthService) RegisterWithCompanyCode(req models.CadastroComCodigoReques
 	needsApproval := s.needsApproval(req.RoleDesejado, company)
 
 	if needsApproval {
-		// Criar solicitação de aprovação
 		return s.createRegistrationRequest(req, company, role)
 	}
 
@@ -176,8 +175,8 @@ func (s *AuthService) RegisterWithCompanyCode(req models.CadastroComCodigoReques
 	}
 
 	// 7. Criar usuário (inativo até confirmar email)
-	defaultConfig2 := "{}"
-	apiToken2 := s.generateAPIToken()
+	defaultConfig := "{}"
+	apiToken := s.generateAPIToken()
 	user := &models.Usuario{
 		Nome:                   req.Nome,
 		Email:                  req.Email,
@@ -187,8 +186,8 @@ func (s *AuthService) RegisterWithCompanyCode(req models.CadastroComCodigoReques
 		RoleID:                 role.ID,
 		EmpresaID:              company.ID,
 		Ativo:                  false, // Inativo até confirmar email
-		ConfiguracoesDashboard: &defaultConfig2,
-		APIToken:               &apiToken2,
+		ConfiguracoesDashboard: &defaultConfig,
+		APIToken:               &apiToken,
 		SenhaAlteradaEm:        time.Now(),
 	}
 
@@ -197,11 +196,16 @@ func (s *AuthService) RegisterWithCompanyCode(req models.CadastroComCodigoReques
 		return nil, "", err
 	}
 
-	// 8. Enviar email de confirmação
-	confirmationToken := s.generateConfirmationToken()
+	// 8. Gerar token de confirmação de email
+	confirmationToken, err := s.generateEmailConfirmationToken(user.ID, user.Email)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// 9. Enviar email de confirmação
 	go s.emailService.SendEmailConfirmation(user.Email, user.Nome, confirmationToken)
 
-	// 9. Gerar JWT (mesmo inativo, para poder confirmar email)
+	// 10. Gerar JWT (mesmo inativo, para poder confirmar email)
 	token, err := s.jwtService.GenerateToken(user.ID, user.Email, user.RoleID, user.EmpresaID)
 	if err != nil {
 		return nil, "", err
@@ -261,11 +265,49 @@ func (s *AuthService) Login(email, password string) (*models.Usuario, string, er
 	return user, token, nil
 }
 
-// ConfirmEmail confirma email do usuário
-func (s *AuthService) ConfirmEmail(userID int, token string) error {
-	// TODO: Implementar validação do token de confirmação
-	// Por enquanto, apenas ativa o usuário
-	return s.userRepo.ActivateUser(userID)
+// ConfirmEmail confirma email do usuário usando token JWT
+func (s *AuthService) ConfirmEmail(token string) (*models.Usuario, error) {
+	// Validar e extrair informações do token de confirmação
+	userID, email, err := s.validateEmailConfirmationToken(token)
+	if err != nil {
+		return nil, errors.New("token de confirmação inválido ou expirado")
+	}
+
+	// Buscar usuário para verificar se ainda existe e se precisa de confirmação
+	user, err := s.userRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("usuário não encontrado")
+	}
+
+	// Verificar se o email do token confere com o do usuário
+	if user.Email != email {
+		return nil, errors.New("token inválido para este usuário")
+	}
+
+	// Verificar se o usuário já está ativo
+	if user.Ativo {
+		return user, nil // Já confirmado, retorna sucesso
+	}
+
+	// Ativar usuário
+	err = s.userRepo.ActivateUser(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Buscar usuário atualizado
+	user, err = s.userRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Enviar email de boas-vindas
+	go s.emailService.SendWelcomeEmail(user.Email, user.Nome)
+
+	return user, nil
 }
 
 // Helper functions
@@ -315,4 +357,49 @@ func (s *AuthService) generateConfirmationToken() string {
 	bytes := make([]byte, 16)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
+}
+
+// generateEmailConfirmationToken gera um JWT para confirmação de email
+func (s *AuthService) generateEmailConfirmationToken(userID int, email string) (string, error) {
+	// Criar claims customizadas para confirmação de email
+	claims := map[string]interface{}{
+		"user_id": userID,
+		"email":   email,
+		"type":    "email_confirmation",
+		"exp":     time.Now().Add(24 * time.Hour).Unix(), // Expira em 24 horas
+		"iat":     time.Now().Unix(),
+	}
+
+	// Gerar token usando o JWT service
+	return s.jwtService.GenerateCustomToken(claims)
+}
+
+// validateEmailConfirmationToken valida token de confirmação de email
+func (s *AuthService) validateEmailConfirmationToken(tokenString string) (int, string, error) {
+	// Validar token usando o JWT service
+	claims, err := s.jwtService.ValidateCustomToken(tokenString)
+	if err != nil {
+		return 0, "", err
+	}
+
+	// Verificar se é um token de confirmação de email
+	tokenType, ok := claims["type"].(string)
+	if !ok || tokenType != "email_confirmation" {
+		return 0, "", errors.New("tipo de token inválido")
+	}
+
+	// Extrair user_id
+	userIDFloat, ok := claims["user_id"].(float64)
+	if !ok {
+		return 0, "", errors.New("user_id inválido no token")
+	}
+	userID := int(userIDFloat)
+
+	// Extrair email
+	email, ok := claims["email"].(string)
+	if !ok {
+		return 0, "", errors.New("email inválido no token")
+	}
+
+	return userID, email, nil
 }
