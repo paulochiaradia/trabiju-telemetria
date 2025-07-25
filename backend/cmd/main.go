@@ -10,7 +10,8 @@ import (
 )
 
 // main inicializa o roteador Gin e registra as rotas da aplicação.
-// Em seguida, inicia o servidor na porta 8080.
+// A porta é configurável via variável de ambiente SERVER_PORT (padrão: 8080).
+// Docker: Dev=8081, Prod=8082 (mapeamento externo)
 func main() {
 	// Carregar configurações do .env
 	cfg, err := config.LoadConfig()
@@ -25,7 +26,6 @@ func main() {
 	}
 	defer conn.Close()
 
-	log.Println("✅ Conexão com banco de dados estabelecida com sucesso!")
 	log.Printf("🚀 Servidor iniciando na porta %s", cfg.ServerPort)
 
 	// Configurar Gin sem middleware padrão (será configurado no SetupRoutes)

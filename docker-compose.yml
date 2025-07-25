@@ -29,9 +29,11 @@ services:
       - db_data_prod:/var/lib/mysql
       - ./backend/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 10s
+      timeout: 10s
       retries: 10
+      start_period: 40s
     networks:
       - app-network
 

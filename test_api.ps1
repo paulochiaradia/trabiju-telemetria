@@ -1,12 +1,12 @@
-# Script de Teste Completo da API de Autenticação
-# PowerShell script para testar todos os fluxos da API
+# Script de Teste Completo da API de Autenticação (DESENVOLVIMENTO)
+# PowerShell script para testar todos os fluxos da API no ambiente de desenvolvimento
 
 $baseUrl = "http://localhost:8081/api/v1"
 $headers = @{
     "Content-Type" = "application/json"
 }
 
-Write-Host "🚀 Iniciando testes da API de Autenticação..." -ForegroundColor Green
+Write-Host "🚀 Iniciando testes da API de Autenticação (DESENVOLVIMENTO - Porta 8081)..." -ForegroundColor Green
 Write-Host "=" * 60
 
 # Função para fazer requisições HTTP

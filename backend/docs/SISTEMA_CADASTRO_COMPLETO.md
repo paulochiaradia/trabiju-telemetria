@@ -212,9 +212,14 @@ FROM_NAME=Gestão Telemetria
 
 # Application
 ENVIRONMENT=development
-PORT=8080
+SERVER_PORT=8080  # Porta interna (Docker mapeia para 8081/8082)
 FRONTEND_URL=http://localhost:3000
 ADMIN_EMAIL=admin@gestaotelemetria.com
+
+# Portas por ambiente:
+# - Docker Dev: http://localhost:8081 (8081:8080)
+# - Docker Prod: http://localhost:8082 (8082:8080)  
+# - Execução Direta: http://localhost:8080
 ```
 
 ---

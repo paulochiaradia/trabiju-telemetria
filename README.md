@@ -45,6 +45,14 @@ Sistema completo de gestão de telemetria para empresas de logística, desenvolv
 
 ## 🚀 Instalação e Execução
 
+### 📡 Configuração de Portas
+
+| Ambiente | Comando | Porta Externa | URL de Acesso |
+|----------|---------|---------------|---------------|
+| **Desenvolvimento** | `docker-compose -f docker-compose.dev.yml up` | `8081` | http://localhost:8081 |
+| **Produção** | `docker-compose up` | `8082` | http://localhost:8082 |
+| **Execução Direta** | `go run cmd/main.go` | `8080` | http://localhost:8080 |
+
 ### Pré-requisitos
 - Docker Desktop instalado e rodando
 - Git para clonar o repositório
@@ -114,17 +122,32 @@ go run cmd/main.go
 
 #### Testar Conexão
 ```bash
+# Docker Dev (porta 8081)
+curl http://localhost:8081/database/test
+
+# Docker Prod (porta 8082)
+curl http://localhost:8082/database/test
+
+# Direto (porta 8080)
 curl http://localhost:8080/database/test
 ```
 
 #### Listar Tabelas
 ```bash
-curl http://localhost:8080/database/tables
+# Docker Dev
+curl http://localhost:8081/database/tables
+
+# Docker Prod
+curl http://localhost:8082/database/tables
 ```
 
 #### Ver Estrutura de Usuários
 ```bash
-curl http://localhost:8080/database/table/usuarios
+# Docker Dev
+curl http://localhost:8081/database/table/usuarios
+
+# Docker Prod
+curl http://localhost:8082/database/table/usuarios
 ```
 
 ---
@@ -254,19 +277,62 @@ trabiju-telemetria/
 ## 🧪 Testes
 
 ### Verificação da Instalação
+
+#### Docker Development (porta 8081)
 ```bash
 # 1. Testar API básica
-curl http://localhost:8080/ping
+curl http://localhost:8081/ping
 # Resposta esperada: {"message":"pong"}
 
 # 2. Testar conexão com banco
-curl http://localhost:8080/database/test
+curl http://localhost:8081/database/test
 # Resposta: status "success" com versão do MySQL
 
 # 3. Verificar tabelas criadas
-curl http://localhost:8080/database/tables
+curl http://localhost:8081/database/tables
 # Resposta: 8 tabelas (usuarios, roles, empresas, etc.)
 ```
+
+#### Docker Production (porta 8082)
+```bash
+# 1. Testar API básica
+curl http://localhost:8082/ping
+
+# 2. Testar conexão com banco
+curl http://localhost:8082/database/test
+
+# 3. Verificar tabelas criadas
+curl http://localhost:8082/database/tables
+```
+
+#### Execução Direta (porta 8080)
+```bash
+# Para desenvolvimento sem Docker
+curl http://localhost:8080/ping
+curl http://localhost:8080/database/test
+curl http://localhost:8080/database/tables
+```
+
+### 🧪 Scripts de Teste Automatizados
+
+Para facilitar os testes, foram criados scripts PowerShell específicos para cada ambiente:
+
+```powershell
+# Launcher interativo - escolha o ambiente
+.\test_launcher.ps1
+
+# Ou execute diretamente por ambiente:
+.\test_launcher.ps1 -Environment dev     # Desenvolvimento (8081)
+.\test_launcher.ps1 -Environment prod    # Produção (8082)
+.\test_launcher.ps1 -Environment direct  # Execução direta (8080)
+.\test_launcher.ps1 -Environment all     # Todos os ambientes
+```
+
+**Scripts disponíveis:**
+- `test_launcher.ps1` - Menu interativo para escolher ambiente
+- `test_api.ps1` - Testes para desenvolvimento (porta 8081)
+- `test_api_prod.ps1` - Testes para produção (porta 8082)
+- `test_api_direct.ps1` - Testes para execução direta (porta 8080)
 
 ### Verificação no Banco
 ```sql

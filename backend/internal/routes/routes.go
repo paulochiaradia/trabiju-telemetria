@@ -55,13 +55,14 @@ func SetupRoutes(router *gin.Engine, db *sql.DB) {
 	// Inicializar controllers
 	authController := controllers.NewAuthController(authService, jwtService)
 	dbController := &controllers.DatabaseController{}
+	healthController := controllers.NewHealthController(db)
 
 	// Rotas públicas com rate limiting padrão
 	public := router.Group("/api/v1")
 	{
 		// Saúde da aplicação (sem rate limit adicional)
 		public.GET("/ping", controllers.PingHandler)
-		public.GET("/health", controllers.PingHandler) // Usando PingHandler como health check
+		public.GET("/health", healthController.HealthCheck) // Health check completo
 
 		// Confirmação de email (sem auth para permitir clique direto do email)
 		public.GET("/auth/confirm-email", authController.ConfirmarEmail)
