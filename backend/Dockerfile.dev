@@ -17,8 +17,14 @@ RUN go install github.com/cosmtrek/air@v1.49.0
 # Copia todo o código fonte (será sobrescrito pelo volume mount em desenvolvimento)
 COPY . .
 
+# Torna o script executável
+RUN chmod +x start-dev.sh
+
+# Cria o diretório tmp se não existir e compila uma primeira vez
+RUN mkdir -p tmp && go build -o ./tmp/trabiju ./cmd
+
 # Expõe a porta usada pelo Gin
 EXPOSE 8080
 
 # Comando para executar o projeto em modo desenvolvimento com hot reload
-CMD ["air", "-c", ".air.toml"]
+CMD ["./start-dev.sh"]
