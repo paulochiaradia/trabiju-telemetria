@@ -67,6 +67,17 @@ func SetupRoutes(router *gin.Engine, db *sql.DB) {
 		public.GET("/auth/confirm-email", authController.ConfirmarEmail)
 	}
 
+	// Rotas híbridas (funcionam com ou sem autenticação)
+	hybrid := router.Group("/api/v1")
+	hybrid.Use(middleware.OptionalAuthMiddleware(jwtService))
+	{
+		// Exemplo: Dashboard público com dados extras para usuários logados
+		// hybrid.GET("/public/dashboard", handlers.PublicDashboard)
+
+		// Exemplo: Informações de empresa (dados básicos públicos, detalhes para usuários logados)
+		// hybrid.GET("/public/company-info", handlers.CompanyInfo)
+	}
+
 	// Rotas de autenticação com rate limiting mais restritivo
 	authGroup := router.Group("/api/v1")
 	authGroup.Use(middleware.RateLimitWithConfig(20, time.Minute)) // 20 req/min para auth
@@ -85,14 +96,24 @@ func SetupRoutes(router *gin.Engine, db *sql.DB) {
 		// Perfil do usuário
 		protected.GET("/auth/profile", authController.GetProfile)
 		protected.POST("/auth/logout", authController.Logout)
+	}
 
+	// Rotas que requerem empresa ativa (operações de negócio)
+	companyProtected := router.Group("/api/v1")
+	companyProtected.Use(middleware.AuthMiddleware(jwtService))
+	companyProtected.Use(middleware.CompanyMiddleware(db))
+	{
 		// Database operations (apenas para admin/gestor)
-		admin := protected.Group("/admin")
+		admin := companyProtected.Group("/admin")
 		admin.Use(middleware.RoleMiddleware("admin", "gestor"))
 		{
 			admin.GET("/db/test", dbController.TestConnection)
 			admin.GET("/db/tables", dbController.ListTables)
 			admin.GET("/db/table/:table", dbController.DescribeTable)
 		}
+
+		// Futuras rotas de telemetria e veículos devem usar companyProtected
+		// telemetry := companyProtected.Group("/telemetry")
+		// vehicles := companyProtected.Group("/vehicles")
 	}
 }

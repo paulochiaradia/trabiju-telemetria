@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -110,8 +112,8 @@ func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 	}
 }
 
-// CompanyMiddleware middleware para verificar se usuário pertence à empresa
-func CompanyMiddleware() gin.HandlerFunc {
+// CompanyMiddleware middleware para verificar se usuário pertence à empresa ativa
+func CompanyMiddleware(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userEmpresaID, exists := c.Get("user_empresa_id")
 		if !exists {
@@ -122,26 +124,67 @@ func CompanyMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Verificar se a empresa do usuário está ativa
-		// TODO: Implementar verificação de empresa ativa
+		empresaID := userEmpresaID.(int)
 
-		// Por enquanto, apenas adiciona ao contexto
-		c.Set("empresa_id", userEmpresaID)
+		// Verificar se a empresa existe e está ativa
+		var empresa struct {
+			ID    int    `json:"id"`
+			Ativa bool   `json:"ativa"`
+			Nome  string `json:"nome"`
+		}
+
+		query := "SELECT id, ativa, nome FROM empresas WHERE id = ?"
+		err := db.QueryRow(query, empresaID).Scan(&empresa.ID, &empresa.Ativa, &empresa.Nome)
+
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSON(http.StatusForbidden, gin.H{
+					"error": "Empresa não encontrada",
+				})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "Erro ao verificar empresa",
+				})
+			}
+			c.Abort()
+			return
+		}
+
+		// Verificar se a empresa está ativa
+		if !empresa.Ativa {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error":   "Empresa inativa",
+				"message": "Sua empresa foi desativada. Entre em contato com o suporte.",
+			})
+			c.Abort()
+			return
+		}
+
+		// Adicionar informações da empresa ao contexto
+		c.Set("empresa_id", empresa.ID)
+		c.Set("empresa_nome", empresa.Nome)
+		c.Set("empresa_ativa", empresa.Ativa)
+
 		c.Next()
 	}
 }
 
 // OptionalAuthMiddleware middleware de autenticação opcional
+// Útil para endpoints que funcionam tanto para usuários autenticados quanto anônimos
 func OptionalAuthMiddleware(jwtService *services.JWTService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
+			// Definir que é usuário anônimo
+			c.Set("is_authenticated", false)
 			c.Next()
 			return
 		}
 
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			// Token mal formado - continuar como anônimo
+			c.Set("is_authenticated", false)
 			c.Next()
 			return
 		}
@@ -149,11 +192,14 @@ func OptionalAuthMiddleware(jwtService *services.JWTService) gin.HandlerFunc {
 		token := tokenParts[1]
 		claims, err := jwtService.ValidateToken(token)
 		if err != nil {
+			// Token inválido - continuar como anônimo
+			c.Set("is_authenticated", false)
 			c.Next()
 			return
 		}
 
-		// Adicionar informações do usuário ao contexto se token válido
+		// Token válido - adicionar informações do usuário
+		c.Set("is_authenticated", true)
 		c.Set("user_id", claims.UserID)
 		c.Set("user_email", claims.Email)
 		c.Set("user_role_id", claims.RoleID)
@@ -161,4 +207,33 @@ func OptionalAuthMiddleware(jwtService *services.JWTService) gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// Helper function para verificar se usuário está autenticado no contexto
+func IsAuthenticated(c *gin.Context) bool {
+	isAuth, exists := c.Get("is_authenticated")
+	if !exists {
+		// Se não existe, verifica se tem user_id (AuthMiddleware obrigatório)
+		_, hasUserID := c.Get("user_id")
+		return hasUserID
+	}
+	return isAuth.(bool)
+}
+
+// Helper function para obter ID do usuário autenticado
+func GetUserID(c *gin.Context) (int, bool) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return 0, false
+	}
+	return userID.(int), true
+}
+
+// Helper function para obter ID da empresa do usuário autenticado
+func GetUserEmpresaID(c *gin.Context) (int, bool) {
+	empresaID, exists := c.Get("user_empresa_id")
+	if !exists {
+		return 0, false
+	}
+	return empresaID.(int), true
 }
